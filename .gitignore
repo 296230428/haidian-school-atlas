@@ -1,0 +1,45 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env
+.env.*
+!.env.example
+config.local.*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Node
+node_modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Spreadsheet lock files
+~$*.xlsx
+.~*.xlsx
+
+# Local map builds that can contain API credentials after regeneration
+outputs/amap_map/海淀小学高德互动地图.html
+outputs/amap_map/海淀小学高德地图标注.png
+
+# Downloaded/cached upstream pages and OCR intermediates
+outputs/ranking_data/*.html
+outputs/map/tiles/
+outputs/school_district/html/
+outputs/school_district/raw_images/
+outputs/school_district/ocr/
+outputs/school_district/ocr_prepared/
+outputs/school_district/admission_images/
+outputs/school_district/*.html
+outputs/school_district/ocr_image
+
+# Large OCR model files; document how to obtain them instead of committing
+*.traineddata

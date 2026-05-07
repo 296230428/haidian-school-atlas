@@ -1,0 +1,18 @@
+{
+  "name": "haidian-school-atlas",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Haidian school ranking, district and map data processing toolkit.",
+  "type": "module",
+  "scripts": {
+    "build:amap": "python3 scripts/build_amap_school_map.py",
+    "serve:amap": "python3 scripts/serve_amap_map.py",
+    "verify:amap": "node scripts/verify_amap_school_map.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.43.0",
+    "sharp": "^0.33.0",
+    "tesseract.js": "^5.0.0"
+  },
+  "devDependencies": {}
+}
