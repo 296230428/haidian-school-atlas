@@ -5,10 +5,18 @@ import os
 from pathlib import Path
 
 
+ROOT = Path(__file__).resolve().parents[1]
 GEOCODES = Path("outputs/map/primary_school_geocodes.json")
 DISTRICT_DATA = Path("outputs/school_district/data/school_district_dataset.json")
 OUT_DIR = Path("outputs/amap_map")
 HTML_OUT = OUT_DIR / "海淀小学高德互动地图.html"
+PLACEHOLDERS = {
+    "your_amap_web_js_api_key",
+    "your_amap_security_jscode",
+    "你的高德 Web JS API Key",
+    "你的安全密钥 securityJsCode",
+    "你的 securityJsCode",
+}
 
 MANUAL = {
     "北京市海淀区中关村第三小学": (39.9758, 116.2992),
@@ -185,6 +193,7 @@ def page_template(schools, amap_key, security_code):
     .chips {{ display: flex; flex-wrap: wrap; gap: 6px; }}
     .chip {{ padding: 5px 8px; border: 1px solid #d8e1eb; background: #f8fafc; border-radius: 999px; font-size: 12px; }}
     .loading {{ position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; background: #eef2f5; color: #344456; font-size: 15px; }}
+    .loading.error {{ padding: 24px; text-align: center; line-height: 1.7; color: #8a2f2f; }}
     .loading.hidden {{ display: none; }}
     a {{ color: #1b66a9; word-break: break-all; }}
     @media (max-width: 900px) {{
@@ -345,6 +354,9 @@ def page_template(schools, amap_key, security_code):
     }}
 
     async function init() {{
+      if (!window.AMapLoader) {{
+        throw new Error("高德 Loader 未加载，请检查网络是否能访问 https://webapi.amap.com/loader.js。");
+      }}
       const AMap = await AMapLoader.load({{ key: AMAP_KEY, version: "2.0" }});
       amap = new AMap.Map("map", {{
         zoom: 12,
@@ -378,7 +390,8 @@ def page_template(schools, amap_key, security_code):
       if (marker && marker.dataset.name) openDetail(marker.dataset.name, false);
     }});
     init().catch((error) => {{
-      $("loading").textContent = "高德地图加载失败，请检查 Key、安全密钥、Referer 白名单或网络。";
+      $("loading").classList.add("error");
+      $("loading").innerHTML = `高德地图加载失败。<br>请检查 Key、安全密钥、Referer 白名单或网络。<br><small>${{escapeHtml(error?.message || error)}}</small>`;
       console.error(error);
     }});
   </script>
@@ -387,11 +400,45 @@ def page_template(schools, amap_key, security_code):
 """
 
 
+def parse_env_file(path):
+    values = {}
+    if not path.exists():
+        return values
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        values[key] = value
+    return values
+
+
+def load_amap_config(root=ROOT):
+    local_values = parse_env_file(root / ".env.local")
+    amap_key = os.environ.get("AMAP_KEY", local_values.get("AMAP_KEY", "")).strip()
+    security_code = os.environ.get("AMAP_SECURITY_CODE", local_values.get("AMAP_SECURITY_CODE", "")).strip()
+    return amap_key, security_code
+
+
+def validate_amap_config(amap_key, security_code):
+    missing = []
+    if not amap_key or amap_key in PLACEHOLDERS:
+        missing.append("AMAP_KEY")
+    if not security_code or security_code in PLACEHOLDERS:
+        missing.append("AMAP_SECURITY_CODE")
+    if missing:
+        raise SystemExit(
+            "Missing valid AMap credentials: "
+            + ", ".join(missing)
+            + ". Put real values in .env.local or export them before running this script."
+        )
+
+
 def main():
-    amap_key = os.environ.get("AMAP_KEY", "").strip()
-    security_code = os.environ.get("AMAP_SECURITY_CODE", "").strip()
-    if not amap_key or not security_code:
-        raise SystemExit("AMAP_KEY and AMAP_SECURITY_CODE are required")
+    amap_key, security_code = load_amap_config()
+    validate_amap_config(amap_key, security_code)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     schools = read_data()
     HTML_OUT.write_text(page_template(schools, amap_key, security_code), encoding="utf-8")

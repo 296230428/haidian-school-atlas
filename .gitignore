@@ -29,6 +29,7 @@ yarn-error.log*
 # Local map builds that can contain API credentials after regeneration
 outputs/amap_map/海淀小学高德互动地图.html
 outputs/amap_map/海淀小学高德地图标注.png
+outputs/amap_map/海淀幼儿园高德互动地图.html
 
 # Downloaded/cached upstream pages and OCR intermediates
 outputs/ranking_data/*.html
@@ -40,6 +41,8 @@ outputs/school_district/ocr_prepared/
 outputs/school_district/admission_images/
 outputs/school_district/*.html
 outputs/school_district/ocr_image
+outputs/kindergarten/raw/
+outputs/kindergarten/data/kindergarten_geocodes.json
 
 # Large OCR model files; document how to obtain them instead of committing
 *.traineddata
